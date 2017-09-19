@@ -21,7 +21,8 @@ class Handler(webapp2.RequestHandler):
 class MainPage(Handler):
     def get(self):
         items = self.request.get_all("food")
-        self.render("shopping_list.html", items = items)
+        self.render("shopping_list.html", items=items)
+
 
 class FizzBuzzHandler(Handler):
     def get(self):
@@ -29,6 +30,28 @@ class FizzBuzzHandler(Handler):
         n = n and int(n)
         self.render('fizzbuzz.html', n=n)
 
+
+class Rot13Handler(Handler):
+    def write_textarea(self, text=""):
+        self.response.out.write(text)
+
+    def rot13(self, text):
+        output = ''
+        for char in text:
+            if char.isalpha():
+                begin = 'A' if char.isupper() else 'a'
+                output += chr((ord(char) - ord(begin) + 13) % 26 + ord(begin))
+        return output
+
+    def get(self):
+        self.render("rot13.html", x="")
+
+    def post(self):
+        user_text = self.request.get("text")
+        text = self.rot13(user_text)
+        self.render("rot13.html", x=text)
+
 app = webapp2.WSGIApplication([('/', MainPage),
-                               ('/fizzbuzz', FizzBuzzHandler)],
+                               ('/fizzbuzz', FizzBuzzHandler),
+                               ('/rot13', Rot13Handler)],
                               debug=True)

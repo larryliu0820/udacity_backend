@@ -12,7 +12,8 @@
         {% elif x % 5 == 0 %}
             Buzz
         {% else %}
-            x
+            {{ x }}
+        {% endif %}
         </li>
     {% endfor %}
 </ol>
