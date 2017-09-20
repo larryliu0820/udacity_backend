@@ -42,7 +42,10 @@ class MainPage(Handler):
         if title and art:
             a = Art(title=title, art=art)
             a.put()
-            self.redirect("/")
+            self.render_front(title=title, art=art)
         else:
             error = "We need both a title and some artwork!"
             self.render_front(title=title, art=art, error=error)
+
+app = webapp2.WSGIApplication([('/', MainPage)],
+                              debug=True)
