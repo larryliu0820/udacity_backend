@@ -42,20 +42,12 @@ class Rot13Handler(Handler):
     def write_textarea(self, text=""):
         self.response.out.write(text)
 
-    def rot13(self, text):
-        output = ''
-        for char in text:
-            if char.isalpha():
-                begin = 'A' if char.isupper() else 'a'
-                output += chr((ord(char) - ord(begin) + 13) % 26 + ord(begin))
-        return output
-
     def get(self):
         self.render("rot13.html", x="")
 
     def post(self):
         user_text = self.request.get("text")
-        text = self.rot13(user_text)
+        text = user_text.encode('rot13')
         self.render("rot13.html", x=text)
 
 class SignupHandler(Handler):
@@ -68,7 +60,7 @@ class SignupHandler(Handler):
             "password": re.compile(r"^.{3,20}$"),
             "email": re.compile(r"^[\S]+@[\S]+.[\S]+$")
         }
-        return RE_DICT[type].match(value)
+        return RE_DICT[type].match(value) and value
 
     def post(self):
         input_dict = {"username": "", "password": "", "verify_pass": "", "email": ""}
@@ -81,16 +73,19 @@ class SignupHandler(Handler):
         for key in input_dict:
             input_dict[key] = self.request.get(key)
             if key is "email" and not input_dict["email"]:
-                error_dict["email_error"] = None
+                input_dict[key] = ""
+                error_dict["email_error"] = ""
+                continue
             if key is not "verify_pass":
                 input_dict[key] = self.valid_input(key, input_dict[key])
-        if not input_dict["password"] or input_dict["password"] != input_dict["verify_pass"]:
-            input_dict["verify_pass"] = None
+
+        if input_dict["password"] and input_dict["password"] != input_dict["verify_pass"]:
+            input_dict["verify_pass"] = ""
         for key in error_dict:
-            if input_dict[key[:-6]]:
+            if key != "email" and input_dict[key[:-6]]:
                 if key[:-6] in ["password", "verify_pass"]:
-                    input_dict[key[:-6]] = None
-                error_dict[key] = None
+                    input_dict[key[:-6]] = ""
+                error_dict[key] = ""
         if any(error_dict.itervalues()):
             self.render("signup.html", **{k: v for d in (input_dict, error_dict) for k, v in d.items()})
         else:
